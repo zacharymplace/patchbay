@@ -1,5 +1,11 @@
 import { getScenarioById } from "./scenarios";
-import type { BoardLane, BoardState, OutputCounts, ScoreState } from "./types";
+import type {
+  BoardLane,
+  BoardPreset,
+  BoardState,
+  OutputCounts,
+  ScoreState
+} from "./types";
 
 export function createInitialScore(): ScoreState {
   return {
@@ -27,7 +33,27 @@ export function createOutputCounts(): OutputCounts {
   };
 }
 
-export function createDefaultLanes(): BoardLane[] {
+export function createStarterLanes(): BoardLane[] {
+  return [
+    {
+      id: "intake",
+      label: "Intake",
+      modules: []
+    },
+    {
+      id: "processing",
+      label: "Processing",
+      modules: []
+    },
+    {
+      id: "resolution",
+      label: "Resolution",
+      modules: []
+    }
+  ];
+}
+
+export function createCalibratedLanes(): BoardLane[] {
   return [
     {
       id: "intake",
@@ -93,7 +119,18 @@ export function createDefaultLanes(): BoardLane[] {
   ];
 }
 
-export function createInitialBoard(scenarioId = "inbox_flood"): BoardState {
+export function createLanesForPreset(preset: BoardPreset): BoardLane[] {
+  if (preset === "calibrated") {
+    return createCalibratedLanes();
+  }
+
+  return createStarterLanes();
+}
+
+export function createInitialBoard(
+  scenarioId = "inbox_flood",
+  preset: BoardPreset = "starter"
+): BoardState {
   const scenario = getScenarioById(scenarioId);
 
   return {
@@ -102,7 +139,7 @@ export function createInitialBoard(scenarioId = "inbox_flood"): BoardState {
     maxTicks: scenario.maxTicks,
     tick: 0,
     status: "idle",
-    lanes: createDefaultLanes(),
+    lanes: createLanesForPreset(preset),
     activeSignals: [],
     resolvedSignals: [],
     truths: {},
@@ -112,7 +149,7 @@ export function createInitialBoard(scenarioId = "inbox_flood"): BoardState {
       {
         tick: 0,
         severity: "info",
-        message: `${scenario.label} loaded. Board is idle.`
+        message: `${scenario.label} loaded with ${preset} board preset. Board is idle.`
       }
     ],
     stableTicks: 0,

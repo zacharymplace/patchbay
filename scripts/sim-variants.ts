@@ -1,10 +1,11 @@
 import { createInitialBoard } from "../src/game/board";
 import { generateRunReport } from "../src/game/report";
 import { stepSimulation } from "../src/game/simulation";
-import type { BoardModule, BoardState } from "../src/game/types";
+import type { BoardModule, BoardPreset, BoardState } from "../src/game/types";
 
 type Variant = {
   label: string;
+  preset: BoardPreset;
   expectedPressure: string;
   mutate: (board: BoardState) => BoardState;
 };
@@ -47,12 +48,20 @@ function labelStyle(style: string): string {
 
 const variants: Variant[] = [
   {
-    label: "Calibrated default board",
+    label: "Starter player board",
+    preset: "starter",
+    expectedPressure: "Should fail without player-added routing modules.",
+    mutate: (board) => board
+  },
+  {
+    label: "Calibrated smoke-test board",
+    preset: "calibrated",
     expectedPressure: "Should stabilize with clean routing.",
     mutate: (board) => board
   },
   {
     label: "Over-filtering board",
+    preset: "calibrated",
     expectedPressure: "Should suppress useful signal and create misroutes.",
     mutate: (board) =>
       mapModules(board, (module) => {
@@ -68,6 +77,7 @@ const variants: Variant[] = [
   },
   {
     label: "Alarm cascade board",
+    preset: "calibrated",
     expectedPressure: "Should over-alert volatile signal and degrade trust.",
     mutate: (board) =>
       mapModules(board, (module) => {
@@ -91,6 +101,7 @@ const variants: Variant[] = [
   },
   {
     label: "No-router board",
+    preset: "calibrated",
     expectedPressure: "Should fall back to Review and fail through misrouting.",
     mutate: (board) =>
       mapModules(board, (module) => {
@@ -107,11 +118,12 @@ console.log("PATCHBAY VARIANT SIMULATION");
 console.log("");
 
 for (const variant of variants) {
-  const initial = createInitialBoard("inbox_flood");
+  const initial = createInitialBoard("inbox_flood", variant.preset);
   const finalBoard = run(variant.mutate(initial));
   const report = generateRunReport(finalBoard);
 
   console.log(`## ${variant.label}`);
+  console.log(`Preset: ${variant.preset}`);
   console.log(`Expected: ${variant.expectedPressure}`);
   console.log(`Result: ${finalBoard.status.toUpperCase()}`);
   console.log(`Ticks: ${finalBoard.tick}`);
@@ -124,9 +136,7 @@ for (const variant of variants) {
   console.log(
     `Outputs: alert=${finalBoard.outputCounts.alert} archive=${finalBoard.outputCounts.archive} review=${finalBoard.outputCounts.review} discard=${finalBoard.outputCounts.discard}`
   );
-  console.log(
-    `Style: ${report.operatingStyle.map(labelStyle).join(", ")}`
-  );
+  console.log(`Style: ${report.operatingStyle.map(labelStyle).join(", ")}`);
 
   if (finalBoard.failureReason) {
     console.log(`Failure Reason: ${finalBoard.failureReason}`);

@@ -6,6 +6,8 @@ export type ModuleKind = "filter" | "gate" | "router" | "buffer" | "amplifier";
 
 export type RunStatus = "idle" | "running" | "stable" | "failed";
 
+export type BoardPreset = "starter" | "calibrated";
+
 export type FailureReason =
   | "overload"
   | "critical_miss"

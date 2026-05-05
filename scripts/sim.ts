@@ -9,7 +9,7 @@ function labelStyle(style: string): string {
     .join(" ");
 }
 
-let board = createInitialBoard("inbox_flood");
+let board = createInitialBoard("inbox_flood", "calibrated");
 board = {
   ...board,
   status: "running"
