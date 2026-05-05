@@ -122,10 +122,9 @@ function trimEvents(events: GameEvent[]): GameEvent[] {
   return events.slice(-80);
 }
 
-function fallbackOutput(signal: Signal): SignalOutput {
-  if (signal.kind === "noise") return "discard";
-  if (signal.kind === "useful") return "archive";
-  if (signal.kind === "critical") return "alert";
+function fallbackOutput(_signal: Signal): SignalOutput {
+  // Without an explicit Router, the board defaults to safe-but-slow Review.
+  // This prevents no-router boards from becoming magically perfect.
   return "review";
 }
 
