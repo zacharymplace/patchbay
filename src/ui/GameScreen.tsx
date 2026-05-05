@@ -367,7 +367,7 @@ export function GameScreen() {
               <button onClick={installBasicPlan} disabled={runLocked}>
                 Install Missing Basic Plan
               </button>
-              <button onClick={clearCurrentModules} disabled={board.status === "running" || modules.length === 0}>
+              <button onClick={clearCurrentModules} disabled={board.status === "running" || runLocked || modules.length === 0}>
                 Clear Modules
               </button>
             </div>

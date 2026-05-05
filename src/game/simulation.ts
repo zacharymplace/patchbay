@@ -93,6 +93,15 @@ function signalFromTemplate(
 
 function spawnSignals(board: BoardState): { signals: Signal[]; truths: SignalTruth[]; events: GameEvent[] } {
   const scenario = getScenarioById(board.scenarioId);
+
+  if (board.tick >= scenario.maxTicks) {
+    return {
+      signals: [],
+      truths: [],
+      events: []
+    };
+  }
+
   const wave = getWaveForTick(scenario, board.tick);
   const spawnCount = board.tick % 7 === 0 ? 2 : 1;
 
