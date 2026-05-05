@@ -6,8 +6,9 @@
   "scripts": {
     "sim": "tsx scripts/sim.ts",
     "check": "tsc --noEmit",
-    "verify": "npm run check && npm run sim && npm run sim:variants",
-    "sim:variants": "tsx scripts/sim-variants.ts"
+    "verify": "npm run check && npm run sim && npm run sim:variants && npm run sim:player-plan",
+    "sim:variants": "tsx scripts/sim-variants.ts",
+    "sim:player-plan": "tsx scripts/sim-player-plan.ts"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
