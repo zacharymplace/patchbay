@@ -153,3 +153,24 @@ export function updateModule(
 export function listModules(board: BoardState): BoardModule[] {
   return board.lanes.flatMap((lane) => lane.modules);
 }
+
+
+export function clearModules(board: BoardState): BoardState {
+  const removedCount = board.lanes.reduce((sum, lane) => sum + lane.modules.length, 0);
+
+  return {
+    ...board,
+    lanes: board.lanes.map((lane) => ({
+      ...lane,
+      modules: []
+    })),
+    events: [
+      ...board.events,
+      {
+        tick: board.tick,
+        severity: "info",
+        message: `Cleared ${removedCount} installed module${removedCount === 1 ? "" : "s"}.`
+      }
+    ]
+  };
+}

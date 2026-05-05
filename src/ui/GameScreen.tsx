@@ -1,17 +1,27 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { addModuleToLane, listModules } from "../game/actions";
+import {
+  addModuleToLane,
+  clearModules,
+  listModules,
+  removeModule,
+  updateModule
+} from "../game/actions";
 import { createInitialBoard } from "../game/board";
 import { generateRunReport } from "../game/report";
 import { stepSimulation } from "../game/simulation";
-import type { BoardState, RunStatus } from "../game/types";
+import type { BoardModule, BoardState, RunStatus } from "../game/types";
 
 function label(value: string): string {
   return value
     .split("_")
     .map((part) => part[0]?.toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function clamp(value: number, min = 0, max = 100): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 function createStarterBoard(): BoardState {
@@ -38,6 +48,79 @@ function pauseBoard(board: BoardState): BoardState {
     ...board,
     status: "idle"
   };
+}
+
+function hasModule(board: BoardState, laneId: string, kind: BoardModule["kind"]): boolean {
+  return board.lanes.some(
+    (lane) => lane.id === laneId && lane.modules.some((module) => module.kind === kind)
+  );
+}
+
+function tuneModule(module: BoardModule, direction: "down" | "up"): BoardModule {
+  const sign = direction === "up" ? 1 : -1;
+
+  if (module.kind === "filter") {
+    return {
+      ...module,
+      strengthThreshold: clamp(module.strengthThreshold + sign * 5)
+    };
+  }
+
+  if (module.kind === "gate") {
+    return {
+      ...module,
+      confidenceThreshold: clamp(module.confidenceThreshold + sign * 5),
+      urgencyOverride: clamp(module.urgencyOverride - sign * 5)
+    };
+  }
+
+  if (module.kind === "buffer") {
+    return {
+      ...module,
+      capacity: Math.max(1, module.capacity + sign),
+      holdTicks: Math.max(0, module.holdTicks + sign)
+    };
+  }
+
+  if (module.kind === "amplifier") {
+    return {
+      ...module,
+      urgencyBoost: clamp(module.urgencyBoost + sign * 2),
+      strengthBoost: clamp(module.strengthBoost + sign * 2)
+    };
+  }
+
+  const modes = ["by_kind", "by_urgency", "by_confidence"] as const;
+  const currentIndex = modes.indexOf(module.routingMode);
+  const nextIndex =
+    direction === "up"
+      ? (currentIndex + 1) % modes.length
+      : (currentIndex - 1 + modes.length) % modes.length;
+
+  return {
+    ...module,
+    routingMode: modes[nextIndex]
+  };
+}
+
+function moduleDetails(module: BoardModule): string {
+  if (module.kind === "filter") {
+    return `threshold ${module.strengthThreshold}`;
+  }
+
+  if (module.kind === "gate") {
+    return `confidence ${module.confidenceThreshold}, urgency override ${module.urgencyOverride}`;
+  }
+
+  if (module.kind === "buffer") {
+    return `capacity ${module.capacity}, hold ${module.holdTicks}`;
+  }
+
+  if (module.kind === "amplifier") {
+    return `urgency +${module.urgencyBoost}, strength +${module.strengthBoost}`;
+  }
+
+  return `mode ${label(module.routingMode)}`;
 }
 
 export function GameScreen() {
@@ -112,35 +195,45 @@ export function GameScreen() {
     setBoard((current) => {
       let next = current;
 
-      next = addModuleToLane(next, {
-        kind: "filter",
-        laneId: "intake",
-        config: { strengthThreshold: 22 }
-      });
+      if (!hasModule(next, "intake", "filter")) {
+        next = addModuleToLane(next, {
+          kind: "filter",
+          laneId: "intake",
+          config: { strengthThreshold: 22 }
+        });
+      }
 
-      next = addModuleToLane(next, {
-        kind: "buffer",
-        laneId: "processing",
-        config: { capacity: 8, holdTicks: 1 }
-      });
+      if (!hasModule(next, "processing", "buffer")) {
+        next = addModuleToLane(next, {
+          kind: "buffer",
+          laneId: "processing",
+          config: { capacity: 8, holdTicks: 1 }
+        });
+      }
 
-      next = addModuleToLane(next, {
-        kind: "gate",
-        laneId: "processing",
-        config: { confidenceThreshold: 45, urgencyOverride: 78 }
-      });
+      if (!hasModule(next, "processing", "gate")) {
+        next = addModuleToLane(next, {
+          kind: "gate",
+          laneId: "processing",
+          config: { confidenceThreshold: 45, urgencyOverride: 78 }
+        });
+      }
 
-      next = addModuleToLane(next, {
-        kind: "amplifier",
-        laneId: "processing",
-        config: { urgencyBoost: 3, strengthBoost: 2 }
-      });
+      if (!hasModule(next, "processing", "amplifier")) {
+        next = addModuleToLane(next, {
+          kind: "amplifier",
+          laneId: "processing",
+          config: { urgencyBoost: 3, strengthBoost: 2 }
+        });
+      }
 
-      next = addModuleToLane(next, {
-        kind: "router",
-        laneId: "resolution",
-        config: { routingMode: "by_kind" }
-      });
+      if (!hasModule(next, "resolution", "router")) {
+        next = addModuleToLane(next, {
+          kind: "router",
+          laneId: "resolution",
+          config: { routingMode: "by_kind" }
+        });
+      }
 
       return next;
     });
@@ -153,15 +246,27 @@ export function GameScreen() {
     });
   }
 
-  function runMany() {
+  function runMany(count: number) {
     setBoard((current) => {
       let next = current.status === "running" ? current : startBoard(current);
 
-      for (let index = 0; index < 10; index += 1) {
+      for (let index = 0; index < count; index += 1) {
         if (next.status !== "running") {
           break;
         }
 
+        next = stepSimulation(next);
+      }
+
+      return next;
+    });
+  }
+
+  function runToEnd() {
+    setBoard((current) => {
+      let next = current.status === "running" ? current : startBoard(current);
+
+      while (next.status === "running" && next.tick < 200) {
         next = stepSimulation(next);
       }
 
@@ -183,6 +288,20 @@ export function GameScreen() {
     });
   }
 
+  function resetAndClear() {
+    setBoard(createStarterBoard());
+  }
+
+  function clearCurrentModules() {
+    setBoard((current) => clearModules(current));
+  }
+
+  function tune(moduleId: string, direction: "down" | "up") {
+    setBoard((current) => updateModule(current, moduleId, (module) => tuneModule(module, direction)));
+  }
+
+  const runLocked = board.status === "stable" || board.status === "failed";
+
   return (
     <main>
       <header className="header">
@@ -203,46 +322,54 @@ export function GameScreen() {
           <div>
             <h2>Run Controls</h2>
             <div className="control-row">
-              <button onClick={() => setStatus("running")} disabled={board.status === "running"}>
+              <button onClick={() => setStatus("running")} disabled={board.status === "running" || runLocked}>
                 Start
               </button>
               <button onClick={() => setStatus("idle")} disabled={board.status !== "running"}>
                 Pause
               </button>
-              <button onClick={runStep} disabled={board.status === "stable" || board.status === "failed"}>
+              <button onClick={runStep} disabled={runLocked}>
                 Step
               </button>
-              <button onClick={runMany} disabled={board.status === "stable" || board.status === "failed"}>
+              <button onClick={() => runMany(10)} disabled={runLocked}>
                 +10 Ticks
               </button>
-              <button onClick={() => setBoard(createStarterBoard())}>Reset</button>
+              <button onClick={runToEnd} disabled={runLocked}>
+                Run to End
+              </button>
+              <button onClick={resetAndClear}>Reset</button>
             </div>
           </div>
 
           <div>
             <h2>Modules</h2>
             <div className="stack">
-              <button className="module-button" onClick={() => addBasicModule("filter")}>
+              <button className="module-button" onClick={() => addBasicModule("filter")} disabled={runLocked}>
                 <strong>Filter</strong>
                 <span>Suppress weak signal in Intake.</span>
               </button>
-              <button className="module-button" onClick={() => addBasicModule("buffer")}>
+              <button className="module-button" onClick={() => addBasicModule("buffer")} disabled={runLocked}>
                 <strong>Buffer</strong>
                 <span>Smooth load in Processing.</span>
               </button>
-              <button className="module-button" onClick={() => addBasicModule("gate")}>
+              <button className="module-button" onClick={() => addBasicModule("gate")} disabled={runLocked}>
                 <strong>Gate</strong>
                 <span>Hold low-confidence signal.</span>
               </button>
-              <button className="module-button" onClick={() => addBasicModule("amplifier")}>
+              <button className="module-button" onClick={() => addBasicModule("amplifier")} disabled={runLocked}>
                 <strong>Amplifier</strong>
                 <span>Boost urgency and strength.</span>
               </button>
-              <button className="module-button" onClick={() => addBasicModule("router")}>
+              <button className="module-button" onClick={() => addBasicModule("router")} disabled={runLocked}>
                 <strong>Router</strong>
                 <span>Resolve by signal kind.</span>
               </button>
-              <button onClick={installBasicPlan}>Install Basic Plan</button>
+              <button onClick={installBasicPlan} disabled={runLocked}>
+                Install Missing Basic Plan
+              </button>
+              <button onClick={clearCurrentModules} disabled={board.status === "running" || modules.length === 0}>
+                Clear Modules
+              </button>
             </div>
           </div>
         </aside>
@@ -261,9 +388,21 @@ export function GameScreen() {
                 <span className="module-chip">empty lane</span>
               ) : (
                 lane.modules.map((module) => (
-                  <span className="module-chip" key={module.id}>
-                    {label(module.kind)}
-                  </span>
+                  <div className="signal-card" key={module.id}>
+                    <strong>{label(module.kind)}</strong>
+                    <div className="signal-meta">{moduleDetails(module)}</div>
+                    <div className="control-row" style={{ marginTop: 8 }}>
+                      <button onClick={() => tune(module.id, "down")} disabled={runLocked}>
+                        Tune -
+                      </button>
+                      <button onClick={() => tune(module.id, "up")} disabled={runLocked}>
+                        Tune +
+                      </button>
+                      <button onClick={() => setBoard((current) => removeModule(current, module.id))} disabled={runLocked}>
+                        Remove
+                      </button>
+                    </div>
+                  </div>
                 ))
               )}
             </div>
@@ -362,6 +501,9 @@ export function GameScreen() {
                 Result: <strong>{label(report.result)}</strong>
               </p>
               <p className="subtitle">Peak load: {report.peakLoad}</p>
+              {board.failureReason ? (
+                <p className="subtitle">Failure: {label(board.failureReason)}</p>
+              ) : null}
               <div>
                 <h3>Operating Style</h3>
                 <ul className="report-list">
