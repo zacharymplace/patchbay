@@ -11,7 +11,9 @@
     "sim:player-plan": "tsx scripts/sim-player-plan.ts",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "healthcheck": "bash scripts/healthcheck.sh",
+    "bootstrap": "bash scripts/bootstrap.sh"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
