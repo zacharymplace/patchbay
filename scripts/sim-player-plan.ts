@@ -117,6 +117,11 @@ if (board.failureReason) {
   console.log(`Failure Reason: ${board.failureReason}`);
 }
 
+if (board.status !== "stable") {
+  console.error(`ASSERTION FAILED: starter + basic plan expected status=stable, got status=${board.status}`);
+  process.exit(1);
+}
+
 console.log("");
 console.log("Recent Events:");
 for (const event of board.events.slice(-8)) {

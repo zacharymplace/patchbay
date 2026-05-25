@@ -75,5 +75,6 @@ for (const event of recentEvents) {
 if (board.status !== "stable") {
   console.log("");
   console.log(`Failure Reason: ${board.failureReason ?? "unknown"}`);
-  console.log("Non-stable result is allowed during early engine tuning.");
+  console.error(`ASSERTION FAILED: calibrated board expected status=stable, got status=${board.status}`);
+  process.exit(1);
 }
