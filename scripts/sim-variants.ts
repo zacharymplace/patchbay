@@ -7,6 +7,7 @@ type Variant = {
   label: string;
   preset: BoardPreset;
   expectedPressure: string;
+  expectedResult: "stable" | "failed";
   mutate: (board: BoardState) => BoardState;
 };
 
@@ -51,18 +52,21 @@ const variants: Variant[] = [
     label: "Starter player board",
     preset: "starter",
     expectedPressure: "Should fail without player-added routing modules.",
+    expectedResult: "failed",
     mutate: (board) => board
   },
   {
     label: "Calibrated smoke-test board",
     preset: "calibrated",
     expectedPressure: "Should stabilize with clean routing.",
+    expectedResult: "stable",
     mutate: (board) => board
   },
   {
     label: "Over-filtering board",
     preset: "calibrated",
     expectedPressure: "Should suppress useful signal and create misroutes.",
+    expectedResult: "failed",
     mutate: (board) =>
       mapModules(board, (module) => {
         if (module.kind === "filter") {
@@ -79,6 +83,7 @@ const variants: Variant[] = [
     label: "Alarm cascade board",
     preset: "calibrated",
     expectedPressure: "Should over-alert volatile signal and degrade trust.",
+    expectedResult: "failed",
     mutate: (board) =>
       mapModules(board, (module) => {
         if (module.kind === "amplifier") {
@@ -103,6 +108,7 @@ const variants: Variant[] = [
     label: "No-router board",
     preset: "calibrated",
     expectedPressure: "Should fall back to Review and fail through misrouting.",
+    expectedResult: "failed",
     mutate: (board) =>
       mapModules(board, (module) => {
         if (module.kind === "router") {
@@ -140,6 +146,14 @@ for (const variant of variants) {
 
   if (finalBoard.failureReason) {
     console.log(`Failure Reason: ${finalBoard.failureReason}`);
+  }
+
+  const actualResult = finalBoard.status === "stable" ? "stable" : "failed";
+  if (actualResult !== variant.expectedResult) {
+    console.error(
+      `ASSERTION FAILED: "${variant.label}" expected result=${variant.expectedResult}, got result=${actualResult}`
+    );
+    process.exit(1);
   }
 
   console.log("");
