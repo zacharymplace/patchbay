@@ -13,7 +13,9 @@
     "build": "next build",
     "start": "next start",
     "healthcheck": "bash scripts/healthcheck.sh",
-    "bootstrap": "bash scripts/bootstrap.sh"
+    "bootstrap": "bash scripts/bootstrap.sh",
+    "agent:preflight": "bash scripts/agent-preflight.sh",
+    "release:ready": "npm run verify"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
