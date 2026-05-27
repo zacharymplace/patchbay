@@ -31,3 +31,18 @@ jobs:
           else
             echo "No package.json present; skipping package metadata validation."
           fi
+
+      - name: Set up Node
+        if: hashFiles('package-lock.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        if: hashFiles('package-lock.json') != ''
+        run: npm ci
+
+      - name: Run verification
+        if: hashFiles('package.json') != ''
+        run: npm run verify
