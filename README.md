@@ -8,16 +8,29 @@ Core promise:
 
 ## Current Status
 
-Doctrine/build planning only.
+Playable simulation prototype.
 
-No engine code has been written yet.
+Patchbay currently includes:
 
-## First Build Artifact
+- deterministic terminal simulation;
+- starter, calibrated, over-filtering, alarm-cascade, and no-router variants;
+- player-authored module plans;
+- differentiated stability, trust, clarity, load, and routing outcomes;
+- a browser game surface backed by the simulation engine.
 
-- `docs/PATCHBAY_MVP_BUILD_SPEC.md`
+## Validation
+
+```bash
+npm run sim
+npm run sim:variants
+npm run sim:player-plan
+npm run release:ready
+```
+
+The calibrated board stabilizes Scenario 001, while intentionally incomplete or distorted boards fail through critical misses, misroutes, false alerts, discarded useful signals, or excess load.
 
 ## Build Rule
 
 Engine first. UI second.
 
-The simulation must work from the terminal before the browser UI is polished.
+The terminal simulation remains the source of truth for gameplay behavior. Browser work must preserve the validated simulation outcomes.
