@@ -1,0 +1,56 @@
+{
+  "schema_version": "systems-builder-lifecycle-v1",
+  "system_id": "patchbay",
+  "display_name": "Patchbay",
+  "phase": "validate",
+  "condition": "waiting",
+  "source": {
+    "repository": "zacharymplace/patchbay",
+    "path": ".",
+    "branch": "main",
+    "commit": "5c671bc"
+  },
+  "evidence": [
+    {
+      "kind": "release-validation",
+      "reference": "npm run release:ready",
+      "result": "pass"
+    },
+    {
+      "kind": "simulation",
+      "reference": "npm run sim",
+      "result": "pass-deterministic"
+    },
+    {
+      "kind": "simulation",
+      "reference": "npm run sim:variants",
+      "result": "pass-deterministic"
+    },
+    {
+      "kind": "build",
+      "reference": "npm run build",
+      "result": "pass"
+    }
+  ],
+  "last_verified_at": "2026-08-24T20:58:00Z",
+  "next_action": {
+    "description": "Run a bounded playtest with non-author participants, record where routing and trust decisions are confusing, and separate gameplay evidence from simulation correctness.",
+    "command": "git status --short"
+  },
+  "blockers": [
+    "Current outcome evidence comes from deterministic simulations.",
+    "No independent player usability or comprehension evidence has been recorded.",
+    "No deployed-use or retention evidence exists.",
+    "The browser surface is validated against the engine but remains a prototype."
+  ],
+  "capabilities": [
+    "systems-puzzle-simulation",
+    "signal-routing",
+    "stability-scoring",
+    "trust-scoring",
+    "player-authored-module-plans",
+    "scenario-variant-testing",
+    "browser-game-surface",
+    "deterministic-release-validation"
+  ]
+}
