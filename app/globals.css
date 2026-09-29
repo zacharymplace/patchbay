@@ -25,7 +25,7 @@ body {
 }
 
 button {
-  border: var(--border);
+  border: 1.5px solid var(--border);
   background: var(--panel);
   color: var(--text);
   border-radius: 0;
@@ -112,7 +112,7 @@ h1 {
 }
 
 .panel {
-  border: var(--border);
+  border: 1.5px solid var(--border);
   background: var(--panel);
   border-radius: 0;
   padding: 16px;
