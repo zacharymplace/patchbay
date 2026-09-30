@@ -38,7 +38,7 @@ button {
 
 button:hover {
   background: var(--spot);
-  color: var(--paper);
+  color: var(--on-spot);
 }
 
 button:focus-visible {
