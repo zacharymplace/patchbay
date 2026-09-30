@@ -154,6 +154,11 @@ h1 {
   font-size: 0.85rem;
 }
 
+.module-button:hover span,
+.module-button:active span {
+  color: var(--on-spot);
+}
+
 .lane {
   border: 1.5px solid var(--border);
   background: var(--panel-2);
