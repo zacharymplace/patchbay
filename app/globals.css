@@ -5,7 +5,7 @@
   --bg: var(--paper);
   --panel: var(--paper);
   --panel-2: var(--paper-2);
-  --border: var(--rule-strong);
+  --panel-border-color: var(--rule-strong);
   --text: var(--ink);
   --muted: var(--ink-muted);
   --soft: var(--ink-2);
@@ -25,7 +25,7 @@ body {
 }
 
 button {
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--panel-border-color);
   background: var(--panel);
   color: var(--text);
   border-radius: 0;
@@ -97,7 +97,7 @@ h1 {
 }
 
 .status-pill {
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--panel-border-color);
   background: var(--panel);
   border-radius: 0;
   font-family: var(--font-mono);
@@ -115,7 +115,7 @@ h1 {
 }
 
 .panel {
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--panel-border-color);
   background: var(--panel);
   border-radius: 0;
   padding: 16px;
@@ -160,7 +160,7 @@ h1 {
 }
 
 .lane {
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--panel-border-color);
   background: var(--panel-2);
   border-radius: 0;
   padding: 12px;
@@ -181,7 +181,7 @@ h1 {
 .module-chip,
 .signal-chip,
 .output-chip {
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--panel-border-color);
   background: var(--panel);
   border-radius: 0;
   padding: 0.45rem 0.65rem;
@@ -201,7 +201,7 @@ h1 {
 }
 
 .signal-card {
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--panel-border-color);
   background: var(--panel);
   border-radius: 0;
   padding: 10px;
@@ -229,7 +229,7 @@ h1 {
 }
 
 .score-item {
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--panel-border-color);
   background: var(--panel);
   border-radius: 0;
   padding: 10px;
@@ -259,7 +259,7 @@ h1 {
 }
 
 .event {
-  border-left: 4px solid var(--border);
+  border-left: 4px solid var(--panel-border-color);
   padding-left: 10px;
   color: var(--soft);
 }
